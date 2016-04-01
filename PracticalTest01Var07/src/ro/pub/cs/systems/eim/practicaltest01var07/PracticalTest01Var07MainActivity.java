@@ -1,8 +1,12 @@
 package ro.pub.cs.systems.eim.practicaltest01var07;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +22,8 @@ public class PracticalTest01Var07MainActivity extends Activity {
 
 	private CheckBox check1 = null;
 	private CheckBox check2 = null;
+	
+	private IntentFilter intentFilter = new IntentFilter();
 
 	private EditText text1 = null;
 	private EditText text2 = null;
@@ -25,6 +31,15 @@ public class PracticalTest01Var07MainActivity extends Activity {
 	private Button next;
 
 	private buttonListener listener = new buttonListener();
+	
+	private MessageBroadcastReceiver messageBroadcastReceiver = new MessageBroadcastReceiver();
+	private class MessageBroadcastReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Log.d("[Message]", intent.getStringExtra("message"));
+			
+		}
+	}
 
 	private class buttonListener implements View.OnClickListener {
 
@@ -89,6 +104,20 @@ public class PracticalTest01Var07MainActivity extends Activity {
 		
 		text1.setEnabled(false);
 		text2.setEnabled(false);
+		
+		if (!text1.isEnabled() && !text2.isEnabled())
+		{
+			Intent intent = new Intent(getApplicationContext(), PracticalTest01Var07Service.class);
+			intent.putExtra("one",text1.getText().toString());
+			intent.putExtra("two", text2.getText().toString());
+			getApplicationContext().startService(intent);
+
+		}
+		
+//		for (int index = 0; index < Constants.actionTypes.length; index++) {
+		      intentFilter.addAction("first");
+		      intentFilter.addAction("second");
+//		    }
 
 	}
 
@@ -140,5 +169,24 @@ public class PracticalTest01Var07MainActivity extends Activity {
 		if (requestCode == 1) {
 			Toast.makeText(this, "The activity returned with result " + resultCode, Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	@Override
+	  protected void onResume() {
+	    super.onResume();
+	    registerReceiver(messageBroadcastReceiver, intentFilter);
+	  }
+	 
+	  @Override
+	  protected void onPause() {
+	    unregisterReceiver(messageBroadcastReceiver);
+	    super.onPause();
+	  }
+	
+	@Override
+	protected void onDestroy() {
+		Intent intent = new Intent(this, PracticalTest01Var07Service.class);
+		stopService(intent);
+		super.onDestroy();
 	}
 }
